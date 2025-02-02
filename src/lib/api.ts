@@ -17,7 +17,7 @@ interface Categoria {
 interface Autor {
   autor_id: number;
   nome: string;
-  nacionalidade: string;
+  nacionalidade: string | null;
 }
 
 interface Usuario {
@@ -42,13 +42,13 @@ interface Reserva {
 export const api = {
   // Autenticação
   async login(email: string, senha: string) {
-    const query = 'SELECT * FROM usuarios WHERE email_principal = ? AND senha = ?';
+    const query = 'SELECT * FROM Usuario WHERE email_principal = ? AND senha = ?';
     return executeQuery<Usuario[]>({ query, values: [email, senha] });
   },
 
   async cadastrarUsuario(usuario: Omit<Usuario, 'usuario_id'>) {
     const query = `
-      INSERT INTO usuarios 
+      INSERT INTO Usuario 
       (nome, email_principal, email_secundario, telefone_principal, telefone_secundario, senha)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
@@ -67,34 +67,34 @@ export const api = {
 
   // Livros
   async getLivros() {
-    return executeQuery<Livro[]>({ query: 'SELECT * FROM livros' });
+    return executeQuery<Livro[]>({ query: 'SELECT * FROM Livro' });
   },
 
   async getLivroPorId(id: number) {
-    const query = 'SELECT * FROM livros WHERE livro_id = ?';
+    const query = 'SELECT * FROM Livro WHERE livro_id = ?';
     return executeQuery<Livro[]>({ query, values: [id] });
   },
 
   // Categorias
   async getCategorias() {
-    return executeQuery<Categoria[]>({ query: 'SELECT * FROM categorias' });
+    return executeQuery<Categoria[]>({ query: 'SELECT * FROM Categoria' });
   },
 
   async getLivrosPorCategoria(categoriaId: number) {
-    const query = 'SELECT * FROM livros WHERE categoria_id = ?';
+    const query = 'SELECT * FROM Livro WHERE categoria_id = ?';
     return executeQuery<Livro[]>({ query, values: [categoriaId] });
   },
 
   // Autores
   async getAutores() {
-    return executeQuery<Autor[]>({ query: 'SELECT * FROM autores' });
+    return executeQuery<Autor[]>({ query: 'SELECT * FROM Autor' });
   },
 
   async getLivrosPorAutor(autorId: number) {
     const query = `
       SELECT l.* 
-      FROM livros l
-      JOIN livros_autores la ON l.livro_id = la.livro_id
+      FROM Livro l
+      JOIN Livro_Autor la ON l.livro_id = la.livro_id
       WHERE la.autor_id = ?
     `;
     return executeQuery<Livro[]>({ query, values: [autorId] });
@@ -104,8 +104,8 @@ export const api = {
   async getReservasUsuario(usuarioId: number) {
     const query = `
       SELECT r.*, l.titulo
-      FROM reservas r
-      JOIN livros l ON r.livro_id = l.livro_id
+      FROM Reserva r
+      JOIN Livro l ON r.livro_id = l.livro_id
       WHERE r.usuario_id = ?
     `;
     return executeQuery<(Reserva & { titulo: string })[]>({ query, values: [usuarioId] });
@@ -113,14 +113,14 @@ export const api = {
 
   async criarReserva(usuarioId: number, livroId: number) {
     const query = `
-      INSERT INTO reservas (usuario_id, livro_id, data_reserva, data_devolucao)
+      INSERT INTO Reserva (usuario_id, livro_id, data_reserva, data_devolucao)
       VALUES (?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY))
     `;
     return executeQuery({ query, values: [usuarioId, livroId] });
   },
 
   async cancelarReserva(reservaId: number) {
-    const query = 'DELETE FROM reservas WHERE reserva_id = ?';
+    const query = 'DELETE FROM Reserva WHERE reserva_id = ?';
     return executeQuery({ query, values: [reservaId] });
   }
 }; 
